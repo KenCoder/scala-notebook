@@ -1,0 +1,21 @@
+<html>
+<head>
+  <title>Unfiltered Scalate example</title>
+  <link rel="stylesheet" type="text/css" href="/assets/css/app.css"/>
+</head>
+<body>
+ <div id="container">
+ <p>{{ body }}</p>
+ <ul>
+   {{#errors}}
+     <li>{{name}} {{error}}</li>
+   {{/errors}}
+ </ul>
+ <form method="POST">
+   <div>Integer <input type="text" name="int" value="{{ int }}" /></div>
+   <div>Palindrome <input type="text" name="palindrome" value="{{ palindrome }}" /></div>
+   <input type="submit" />
+ </form>
+ </div>
+</body>
+</html>
