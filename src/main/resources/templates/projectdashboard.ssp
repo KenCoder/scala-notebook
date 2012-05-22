@@ -1,8 +1,5 @@
 <% layout("default.ssp") { %>
 <%@ var project: String %>
-<%@ val base_project_url:String = "/" %>
-<%@ val base_kernel_url:String = "/" %>
-<%@ val read_only:Boolean = false %>
 
 <% import com.k2sw.scalanb.LayoutTools._  %>
 

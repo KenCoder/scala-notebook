@@ -20,9 +20,13 @@ class App extends unfiltered.filter.Plan {
   def intent = {
     case req@GET(Path("/")) =>
       view(req, "projectdashboard.ssp",
-        "project" -> nbm.notebookDir)
+        "project" -> nbm.notebookDir.getPath)
 
     case GET(Path("/notebooks"))  => Json(nbm.listNotebooks)
+    case req@GET(Path("/new"))  =>
+      view(req, "notebook.ssp",
+        "notebook_id" -> nbm.newNotebook,
+        "project" -> nbm.notebookDir.getPath)
 
     case req@POST(Path(p) & Params(params)) =>
     Pass
