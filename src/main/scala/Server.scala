@@ -12,10 +12,11 @@ object Server {
   val logger = Logger(Server.getClass)
 
   def main(args: Array[String]) {
-    val http = unfiltered.jetty.Http.anylocal
-    http.context("/assets/static") {
+    val port =8899
+    val http = unfiltered.jetty.Http.local(port)
+    http.context("/static") {
       _.resources(getClass().getResource("/from_ipython/static"))
-    }.filter(new ReqLogger).filter(new App).run({
+    }.filter(new ReqLogger).filter(new App(port)).run({
       svr =>
         unfiltered.util.Browser.open(http.url)
     }, {

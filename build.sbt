@@ -11,7 +11,8 @@ libraryDependencies ++= Seq(
   "org.fusesource.scalate" % "scalate-core" % "1.5.2",
   "org.clapper" %% "avsl" % "0.3.6",
   "net.liftweb" %% "lift-json" % "2.4",
-   "net.databinder" %% "unfiltered-json" % "0.6.2"
+   "net.databinder" %% "unfiltered-json" % "0.6.2",
+   "commons-io" % "commons-io" % "1.3.2"
 )
 
 resolvers ++= Seq(

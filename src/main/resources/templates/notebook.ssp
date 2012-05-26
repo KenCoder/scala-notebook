@@ -5,10 +5,13 @@
 
 #set(stylesheet)
 
+#if (mathjax_url != null)
+<script type="text/javascript" src="${mathjax_url}?config=TeX-AMS_HTML" charset="utf-8"></script>
+#end
 <script type="text/javascript">
 // MathJax disabled, set as null to distingish from *missing* MathJax,
 // where it will be undefined, and should prompt a dialog later.
-window.mathjax_url = "null";
+window.mathjax_url = "${mathjax_url}";
 </script>
 
 <link rel="stylesheet" href="${static_url("codemirror/lib/codemirror.css")}">

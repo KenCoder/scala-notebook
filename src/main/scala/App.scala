@@ -6,9 +6,11 @@ import unfiltered.response._
 import org.clapper.avsl.Logger
 import java.io.File
 import unfiltered.request.Accepts.Jsonp
+import net.liftweb.json._
+import net.liftweb.json.JsonDSL._
 
 /** unfiltered plan */
-class App extends unfiltered.filter.Plan {
+class App(port:Int) extends unfiltered.filter.Plan {
   import QParams._
 
   val logger = Logger(classOf[App])
@@ -17,15 +19,41 @@ class App extends unfiltered.filter.Plan {
 
   val nbm = new NotebookManager()
 
+  val km = new KernelManager
+
   def intent = {
     case req@GET(Path("/")) =>
       view(req, "projectdashboard.ssp",
         "project" -> nbm.notebookDir.getPath)
 
-    case GET(Path("/notebooks"))  => Json(nbm.listNotebooks)
-    case req@GET(Path("/new"))  =>
+    case Path(Seg("notebooks" :: Nil))  => Json(nbm.listNotebooks)
+
+    case req@Path(Seg("new" :: Nil))  =>
       view(req, "notebook.ssp",
         "notebook_id" -> nbm.newNotebook,
+        "project" -> nbm.notebookDir.getPath)
+
+    case Path(Seg("notebooks" :: id :: Nil))  =>
+      try {
+        println("Looking for " + id)
+        val (lastMod, name, data) = nbm.getNotebook(id)
+        JsonContent ~> ResponseHeader("Content-Disposition", "attachment; filename=\"%s.scalanb".format(name) :: Nil) ~> ResponseHeader("Last-Modified", lastMod :: Nil) ~> ResponseString(data) ~> Ok
+      } catch {
+        case e:Exception => e.printStackTrace()
+        throw e
+      }
+    case req@Path(Seg("clusters" :: Nil))  =>
+      val s = """[{"profile":"default","status":"stopped","profile_dir":"C:\\Users\\Ken\\.ipython\\profile_default"}]"""
+      JsonContent ~> ResponseString(s) ~> Ok
+
+    case req@POST(Path(Seg("kernels" :: Nil)) & Params(params)) =>
+      val kernelId = km.startKernel(params("notebook").head)
+      val json = ("kernel_id" -> kernelId) ~ ("ws_url" -> "ws://127.0.0.1:%d".format(port))
+      JsonContent ~> ResponseString(compact(render(json))) ~> Ok
+
+    case req@Path(Seg(id :: Nil))  =>
+      view(req, "notebook.ssp",
+        "notebook_id" -> id,
         "project" -> nbm.notebookDir.getPath)
 
     case req@POST(Path(p) & Params(params)) =>

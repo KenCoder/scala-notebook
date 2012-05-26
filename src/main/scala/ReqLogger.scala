@@ -11,10 +11,10 @@ class ReqLogger extends unfiltered.filter.Plan {
     val logger = Logger(classOf[ReqLogger])
     def intent = {
       case req@GET(Path(p)) =>
-        logger.info("Req " + p)
+        logger.info("Req " + req.uri)
         Pass
       case req@POST(Path(p) & Params(params)) =>
-        logger.debug("POST %s" format p)
+        logger.info("POST %s: %s".format(p, params))
         Pass
     }
 }

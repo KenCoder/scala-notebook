@@ -1,15 +1,18 @@
 package com.k2sw.scalanb
 
-import java.util.UUID
 import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
 import java.io._
+import org.apache.commons.io.FileUtils
+import java.util.{Date, UUID}
+import java.text.SimpleDateFormat
 
 /**
  * Author: Ken
  */
 
 class NotebookManager {
+
   val extension = ".snb"
   val notebookDir = new java.io.File(".").getCanonicalFile
 
@@ -19,7 +22,7 @@ class NotebookManager {
     JArray(res.toList)
   }
 
-  def notebookFile(filename: String) = new File(notebookDir.getPath + File.pathSeparator + filename + extension)
+  def notebookFile(name: String) = new File(notebookDir.getCanonicalPath + File.pathSeparator + name + extension)
 
   def incrementFileName(base:String) = {
     Stream.from(1) map { i => base + i } filterNot { fn => notebookFile(fn).exists() } head
@@ -27,36 +30,33 @@ class NotebookManager {
 
   def newNotebook = {
     val name = incrementFileName("Untitled")
-
-    val nb = new Notebook(notebookId(name), name)
+    val nb = Notebook(name, Metadata(name), List(Worksheet(Nil)))
     save(nb)
-    nb.id
+    notebookId(name)
   }
+
+  def getNotebook(id: String) = {
+    val nb = load(idToName(id))
+    val data = FileUtils.readFileToString(notebookFile(nb.name))
+    val df = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss z'('Z')'");
+    val last_mtime = df.format(new Date(notebookFile(nb.name).lastModified()))
+    (last_mtime, nb.name, data)
+  }
+
 
 
   def save(nb: Notebook) {
-    val oos = new ObjectOutputStream(new FileOutputStream(notebookFile(nb.name)))
-    try {
-      oos.writeObject(nb)
-    }
-    finally {
-      oos.close()
-    }
+    FileUtils.writeStringToFile(notebookFile(nb.name), NBSerializer.write(nb))
   }
 
-  def load(name: String): Notebook = {
-    val ois = new ObjectInputStream(new FileInputStream(notebookFile(name)))
-    try {
-      ois.readObject().asInstanceOf[Notebook]
-    } finally {
-      ois.close()
-    }
-  }
+  def load(name: String): Notebook = NBSerializer.read(FileUtils.readFileToString(notebookFile(name)))
 
+  val nameToId = collection.mutable.Map[String, String]()
+  val idToName = collection.mutable.Map[String, String]()
 
-
-  val knownIds = collection.mutable.Map[String, String]()
-
-  def notebookId(name: String) = knownIds.getOrElseUpdate(name, UUID.randomUUID.toString)
-
+  def notebookId(name: String) = nameToId.getOrElseUpdate(name, {
+    val id = UUID.randomUUID.toString
+    idToName += id -> name
+    id
+  })
 }
