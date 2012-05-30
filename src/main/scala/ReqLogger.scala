@@ -7,9 +7,9 @@ import unfiltered.response.Pass
  * Author: Ken
  */
 
-class ReqLogger extends unfiltered.filter.Plan {
+class ReqLogger {
     val logger = Logger(classOf[ReqLogger])
-    def intent = {
+    val intent:unfiltered.netty.cycle.Plan.Intent = {
       case req@GET(Path(p)) =>
         logger.info("Req " + req.uri)
         Pass

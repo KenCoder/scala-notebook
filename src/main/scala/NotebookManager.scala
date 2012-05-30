@@ -18,11 +18,14 @@ class NotebookManager {
 
   def listNotebooks = {
     val files = notebookDir.listFiles map {_.getName} filter {_.endsWith(extension)} toIndexedSeq
-    val res = files.sorted map { fn => ("name" -> fn) ~ ("notebook_id" -> notebookId(fn)) }
+    val res = files.sorted map { fn => {
+      val name = fn.substring(0, fn.length - extension.length)
+      ("name" -> name) ~ ("notebook_id" -> notebookId(name))
+    } }
     JArray(res.toList)
   }
 
-  def notebookFile(name: String) = new File(notebookDir.getCanonicalPath + File.pathSeparator + name + extension)
+  def notebookFile(name: String) = new File(notebookDir.getCanonicalPath + File.separator + name + extension)
 
   def incrementFileName(base:String) = {
     Stream.from(1) map { i => base + i } filterNot { fn => notebookFile(fn).exists() } head

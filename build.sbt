@@ -7,6 +7,7 @@ version := "0.1.0-SNAPSHOT"
 libraryDependencies ++= Seq(
   "net.databinder" %% "unfiltered-filter" % "0.6.2",
   "net.databinder" %% "unfiltered-jetty" % "0.6.2",
+  "net.databinder" %% "unfiltered-netty-websockets" % "0.6.2",
   // note: scalate 1.5.3 leaves sbt's run task hanging
   "org.fusesource.scalate" % "scalate-core" % "1.5.2",
   "org.clapper" %% "avsl" % "0.3.6",
