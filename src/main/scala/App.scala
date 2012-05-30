@@ -26,19 +26,6 @@ class App(port:Int) {
 
   val km = new KernelManager
 
-  def build(header: JValue, session: JValue, msgType: String, content: JValue) = {
-    val respJson = ("parent_header" -> header) ~
-      ("msg_type" -> msgType) ~
-      ("msg_id" -> UUID.randomUUID().toString) ~
-      ("content" -> content) ~
-      ("header" -> ("username" -> "kernel") ~
-              ("session" -> session) ~
-              ("msg_id" -> UUID.randomUUID().toString) ~
-              ("msg_type" -> msgType))
-
-    pretty(render(respJson))
-  }
-
   def send(sock: WebSocket, msg: String) = {
     try {
       println("Sending " + msg)
@@ -48,35 +35,41 @@ class App(port:Int) {
     }
   }
 
-  var sockets = new scala.collection.mutable.ListBuffer[WebSocket]()
+  val sessions = collection.mutable.Map[String, Session]()
+  def get(kernel: String) = {
+    sessions.getOrElseUpdate(kernel, {
+      val actor = new Session
+      actor.start()
+      actor
+    })
+  }
+
   object WebSockets {
-    val sessions = collection.mutable.Map[String, Session]()
 
     val intent: unfiltered.netty.websockets.Plan.Intent =     {
       case req@Path(Seg("kernels" :: kernel :: channel :: Nil)) => {
-        case Open(websock) =>
+          case Open(websock) =>
           println("Opening Socket" + channel + " for " + kernel + " to " + websock)
           if (channel == "iopub")
-            sessions.getOrElseUpdate(kernel, {
-              val actor = new Session(websock)
-              actor.start()
-              actor
-            })
+            get(kernel) ! IopubChannel(new WebSockWrapper(websock))
 
         case Message(s, Text(msg)) =>
-          val skern = sessions(kernel)
           println("Message for " + kernel + ":" + msg)
 
           val json = parse(msg)
           for {
             JField("header", header) <- json
-            JField("session", session) <- json
-            JField("msg_type", JString("execute_request")) <- json
-            JField("code", JString(code)) <- json
-            JField("execution_count", JInt(execCount)) <- json
+            JField("session", session) <- header
+            JField("msg_type", JString("execute_request")) <- header
+            JField("content", content) <- json
+            JField("code", JString(code)) <- content
           }  {
-            skern ! ExecuteRequest(execCount, code)
-            }
+            val kern = get(kernel)
+            val execCounter = kern.executionCounter.incrementAndGet()
+            kern ! ExecuteRequest(header, session, execCounter, code)
+
+            val sock = new WebSockWrapper(s)
+            sock.send(header, session, "execute_reply", ("execution_count" -> execCounter) ~ ("code" -> "1+2"))
           }
 
 //          sessions(s) !? (SessionRequest(msg)) match {
@@ -87,8 +80,9 @@ class App(port:Int) {
           println("Closing Socket " + websock)
           sessions -= kernel
 
-        case Error(s, e) => println("Error %s" format e.getMessage)
-      }
+        case Error(s, e) =>
+          e.printStackTrace()
+    }
     }
   }
 
