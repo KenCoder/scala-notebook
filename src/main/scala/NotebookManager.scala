@@ -6,6 +6,7 @@ import java.io._
 import org.apache.commons.io.FileUtils
 import java.util.{Date, UUID}
 import java.text.SimpleDateFormat
+import com.k2sw.scalanb.NBSerializer.{Metadata, Worksheet, Notebook}
 
 /**
  * Author: Ken

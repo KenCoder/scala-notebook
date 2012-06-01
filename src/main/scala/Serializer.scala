@@ -8,18 +8,19 @@ import net.liftweb.json.Serialization
  * The core object model. Fields are pythonic naming convention to match javascript
  */
 
-trait Output
-case class ScalaOutput(prompt_number: Int, text: String) extends Output
-case class ScalaError(prompt_number: Int, text: String) extends Output
-
-trait Cell
-case class CodeCell(input: String, language: String, collapsed: Boolean,prompt_number:Int, outputs: List[Output]) extends Cell
-case class MarkdownCell(source: String) extends Cell
-case class Metadata(name: String)
-case class Worksheet(cells: List[Cell])
-case class Notebook(name: String, metadata: Metadata, worksheets: List[Worksheet])
 
 object NBSerializer {
+  trait Output
+  case class ScalaOutput(prompt_number: Int, text: String) extends Output
+  case class ScalaError(prompt_number: Int, text: String) extends Output
+
+  trait Cell
+  case class CodeCell(input: String, language: String, collapsed: Boolean,prompt_number:Int, outputs: List[Output]) extends Cell
+  case class MarkdownCell(source: String) extends Cell
+  case class Metadata(name: String)
+  case class Worksheet(cells: List[Cell])
+  case class Notebook(name: String, metadata: Metadata, worksheets: List[Worksheet])
+
   val testnb = Notebook("ken1", Metadata("ken1"), List(Worksheet(List(CodeCell("1+2", "python", false,2, List(ScalaOutput(2, "3")))))))
 
   implicit val formats = Serialization.formats(ShortTypeHints(List(classOf[CodeCell], classOf[MarkdownCell], classOf[ScalaOutput], classOf[ScalaError])))
@@ -30,7 +31,7 @@ object NBSerializer {
 
     val mapped = json transform {
       case JField("jsonClass", JString(x)) =>
-        val (typ, cat, _) = translations filter { _._3 == x } head;
+        val (typ, cat, _) = (translations filter { _._3 == x }).head
         JField(typ, JString(cat))
       }
     compact(render(mapped))
@@ -40,14 +41,11 @@ object NBSerializer {
     val json = parse(s)
     val mapped = json transform {
       case JField(typ, JString(cat)) if (translations exists { _._1 == typ}) =>
-        val (_, _, clazz) = translations filter { x => x._1 == typ && x._2 == cat } head;
+        val (_, _, clazz) = (translations filter { x => x._1 == typ && x._2 == cat }).head
         JField("jsonClass", JString(clazz))
     }
     mapped.extract[Notebook]
   }
-
-
-
 
 }
 //  def reads(s: String) : Notebook = {

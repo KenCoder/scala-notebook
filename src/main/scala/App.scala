@@ -87,7 +87,7 @@ class App(port:Int) {
   }
 
   object WebServer {
-    val intent:unfiltered.netty.cycle.Plan.Intent = {
+    val nbIntent:unfiltered.netty.cycle.Plan.Intent = {
       case req@GET(Path("/")) =>
         view(req, "projectdashboard.ssp",
           "project" -> nbm.notebookDir.getPath)
@@ -99,7 +99,7 @@ class App(port:Int) {
           "notebook_id" -> nbm.newNotebook,
           "project" -> nbm.notebookDir.getPath)
 
-      case Path(Seg("notebooks" :: id :: Nil))  =>
+      case GET(Path(Seg("notebooks" :: id :: Nil)))  =>
         try {
           println("Looking for " + id)
           val (lastMod, name, data) = nbm.getNotebook(id)
@@ -108,6 +108,13 @@ class App(port:Int) {
           case e:Exception => e.printStackTrace()
           throw e
         }
+
+      case POST(Path(Seg("notebooks" :: id :: Nil)) & Params(params))  =>
+        println("Posting notebook %s params %s".format(id, params))
+        Pass
+    }
+
+    val otherIntent:unfiltered.netty.cycle.Plan.Intent = {
       case req@Path(Seg("clusters" :: Nil))  =>
         val s = """[{"profile":"default","status":"stopped","profile_dir":"C:\\Users\\Ken\\.ipython\\profile_default"}]"""
         JsonContent ~> ResponseString(s) ~> Ok
@@ -126,29 +133,6 @@ class App(port:Int) {
       case req@POST(Path(p) & Params(params)) =>
         println("post passing")
         Pass
-//
-//      case msg =>
-//      println("other passing: " + msg)
-//      Pass
-
-      //      val expected = for {
-  //        int <- lookup("int") is
-  //          int { _ + " is not an integer" } is
-  //          required("missing int")
-  //        word <- lookup("palindrome") is
-  //          trimmed is
-  //          nonempty("Palindrome is empty") is
-  //          pred(palindrome, { _ + " is not a palindrome" }) is
-  //          required("missing palindrome")
-  //      } yield view(
-  //        req, "palindrome.mustache",
-  //        "body" -> "Yup. %d is an integer and %s is a palindrome".format(
-  //          int.get, word.get
-  //        )
-  //      )
-  //      expected(params) orFail { fails =>
-  //        view(req, "palindrome.mustache", "errors" -> fails.map { f => Map("error" -> f.error) })
-  //      }
     }
 
     def palindrome(s: String) = s.toLowerCase.reverse == s.toLowerCase
