@@ -34,7 +34,7 @@ class NotebookManager {
 
   def newNotebook = {
     val name = incrementFileName("Untitled")
-    val nb = Notebook(name, Metadata(name), List(Worksheet(Nil)))
+    val nb = Notebook( Metadata(name), List(Worksheet(Nil)), None)
     save(nb)
     notebookId(name)
   }

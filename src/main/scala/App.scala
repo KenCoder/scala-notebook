@@ -109,9 +109,12 @@ class App(port:Int) {
           throw e
         }
 
-      case POST(Path(Seg("notebooks" :: id :: Nil)) & Params(params))  =>
-        println("Posting notebook %s params %s".format(id, params))
-        Pass
+      case req@PUT(Path(Seg("notebooks" :: id :: Nil)))  =>
+        val contents = Body.string(req)
+        println("Putting notebook:" + contents)
+        val nb  = NBSerializer.read( contents)
+        nbm.save(nb)
+        Ok
     }
 
     val otherIntent:unfiltered.netty.cycle.Plan.Intent = {

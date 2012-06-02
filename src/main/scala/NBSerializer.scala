@@ -15,15 +15,22 @@ object NBSerializer {
   case class ScalaError(prompt_number: Int, text: String) extends Output
 
   trait Cell
-  case class CodeCell(input: String, language: String, collapsed: Boolean,prompt_number:Int, outputs: List[Output]) extends Cell
+  case class CodeCell(input: String, language: String, collapsed: Boolean,prompt_number:Option[Int], outputs: List[Output]) extends Cell
   case class MarkdownCell(source: String) extends Cell
   case class Metadata(name: String)
   case class Worksheet(cells: List[Cell])
-  case class Notebook(name: String, metadata: Metadata, worksheets: List[Worksheet])
+  case class Notebook(metadata: Metadata, worksheets: List[Worksheet], nbformat: Option[Int]) {
+    def name = metadata.name
+  }
 
-  val testnb = Notebook("ken1", Metadata("ken1"), List(Worksheet(List(CodeCell("1+2", "python", false,2, List(ScalaOutput(2, "3")))))))
+  // Short type hints for inner classes of this class
+  case class NBTypeHints(hints: List[Class[_]]) extends TypeHints {
+    def hintFor(clazz: Class[_]) = clazz.getName.substring(clazz.getName.lastIndexOf("$")+1)
+    def classFor(hint: String) = hints find (hintFor(_) == hint)
+  }
 
-  implicit val formats = Serialization.formats(ShortTypeHints(List(classOf[CodeCell], classOf[MarkdownCell], classOf[ScalaOutput], classOf[ScalaError])))
+
+  implicit val formats = Serialization.formats(NBTypeHints(List(classOf[CodeCell], classOf[MarkdownCell], classOf[ScalaOutput], classOf[ScalaError])))
   val translations = List( ("cell_type", "code", "CodeCell"), ("cell_type", "markdown", "MarkdownCell"), ("output_type", "pyout", "ScalaOutput"))
 
   def write(nb: Notebook): String = {
@@ -31,7 +38,8 @@ object NBSerializer {
 
     val mapped = json transform {
       case JField("jsonClass", JString(x)) =>
-        val (typ, cat, _) = (translations filter { _._3 == x }).head
+        val (typ, cat, _) =
+          (translations filter { _._3 == x }).head
         JField(typ, JString(cat))
       }
     compact(render(mapped))
