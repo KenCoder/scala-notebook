@@ -17,11 +17,12 @@ object Server {
   def main(args: Array[String]) {
     val port = 8899
 
-    val app: App = new App(port)
+    val context = new Context(port)
+    val app = new OtherServer(context)
 
-    val wsPlan = unfiltered.netty.websockets.Planify (app.WebSockets.intent).onPass(_.sendUpstream(_))
-    val pagePlan1 = unfiltered.netty.cycle.Planify(app.WebServer.nbIntent)
-    val pagePlan2 = unfiltered.netty.cycle.Planify(app.WebServer.otherIntent)
+    val wsPlan = unfiltered.netty.websockets.Planify (new WebSocketIntent(context).intent).onPass(_.sendUpstream(_))
+    val pagePlan1 = unfiltered.netty.cycle.Planify(new NotebookServer(context).nbIntent)
+    val pagePlan2 = unfiltered.netty.cycle.Planify(new OtherServer(context).otherIntent)
     val loggerPlan = unfiltered.netty.cycle.Planify(new ReqLogger().intent)
 
     val http = unfiltered.netty.Http(port)

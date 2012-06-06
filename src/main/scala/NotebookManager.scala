@@ -48,6 +48,15 @@ class NotebookManager {
   }
 
 
+  def delete(id: String) {
+    for (name <- idToName.get(id)) {
+      val f = notebookFile(name)
+      if (f.exists())
+        f.delete
+      idToName.remove(id)
+      nameToId.remove(name)
+    }
+  }
 
   def save(nb: Notebook) {
     FileUtils.writeStringToFile(notebookFile(nb.name), NBSerializer.write(nb))

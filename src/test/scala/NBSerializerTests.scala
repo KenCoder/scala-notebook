@@ -1,3 +1,4 @@
+
 import com.k2sw.scalanb.NBSerializer
 import com.k2sw.scalanb.NBSerializer._
 import org.scalatest.exceptions.TestFailedException
