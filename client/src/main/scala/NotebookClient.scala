@@ -1,7 +1,8 @@
-package com.k2sw.scalanb.client
+package com.k2sw.scalanb
+package client
 
-import actors.Actor
-import akka.actor.ActorSystem
+import akka.actor.{Actor, Props, ActorSystem}
+
 
 /**
  * Author: Ken
@@ -10,12 +11,15 @@ import akka.actor.ActorSystem
 object NotebookClient {
   lazy val system = ActorSystem("ScalaNotebookClient")
   def main(args: Array[String]) {
-    system.start()
+    system.actorOf(Props[NotebookClient], name = "primer")
+    println("Client is running - press Enter to quit")
+    Console.readLine()
+    system.shutdown()
   }
 }
 
-
 class NotebookClient extends Actor {
   def receive = {
+    case _ => println("received")
   }
 }

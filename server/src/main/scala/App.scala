@@ -26,7 +26,7 @@ class App(port:Int) {
   val executionCounter = new AtomicInteger(0)
 
   val nbm = new NotebookManager()
-  val system = ActorSystem("PiSystem")
+  val system = ActorSystem("NotebookServer")
   // create the result listener, which will print the result and shutdown the system
   val km = new KernelManager
 
@@ -66,7 +66,7 @@ class App(port:Int) {
           }  {
             val kern = get(kernel)
             val execCounter = executionCounter.incrementAndGet()
-            kern ! ExecuteRequest(header, session, execCounter, code)
+            kern ! SessionRequest(header, session, execCounter, code)
 
             val sock = new WebSockWrapper(s)
             sock.send(header, session, "execute_reply", ("execution_count" -> execCounter) ~ ("code" -> "1+2"))
