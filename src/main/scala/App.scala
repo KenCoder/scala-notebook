@@ -13,6 +13,8 @@ import unfiltered.netty.ReceivedMessage
 import org.jboss.netty.handler.codec.http.websocket.DefaultWebSocketFrame
 import org.jboss.netty.handler.codec.http.HttpHeaders
 import java.util.UUID
+import akka.actor.{ActorRef, Props, ActorSystem}
+import java.util.concurrent.atomic.AtomicInteger
 
 /** unfiltered plan */
 class App(port:Int) {
@@ -21,9 +23,11 @@ class App(port:Int) {
   val logger = Logger(classOf[App])
 
   val notbook_dir = new java.io.File( "." ).getCanonicalPath();
+  val executionCounter = new AtomicInteger(0)
 
   val nbm = new NotebookManager()
-
+  val system = ActorSystem("PiSystem")
+  // create the result listener, which will print the result and shutdown the system
   val km = new KernelManager
 
   def send(sock: WebSocket, msg: String) = {
@@ -35,13 +39,9 @@ class App(port:Int) {
     }
   }
 
-  val sessions = collection.mutable.Map[String, Session]()
+  val sessions = collection.mutable.Map[String, ActorRef]()
   def get(kernel: String) = {
-    sessions.getOrElseUpdate(kernel, {
-      val actor = new Session
-      actor.start()
-      actor
-    })
+    sessions.getOrElseUpdate(kernel, system.actorOf(Props[Session], name = "session"))
   }
 
   object WebSockets {
@@ -65,7 +65,7 @@ class App(port:Int) {
             JField("code", JString(code)) <- content
           }  {
             val kern = get(kernel)
-            val execCounter = kern.executionCounter.incrementAndGet()
+            val execCounter = executionCounter.incrementAndGet()
             kern ! ExecuteRequest(header, session, execCounter, code)
 
             val sock = new WebSockWrapper(s)

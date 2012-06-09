@@ -1,6 +1,9 @@
 package com.k2sw.scalanb
 
-import actors.Actor
+import akka.actor._
+import akka.routing.RoundRobinRouter
+import akka.util.Duration
+import akka.util.duration._
 import unfiltered.netty.websockets.WebSocket
 import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
@@ -16,7 +19,6 @@ import tools.nsc.interpreter.Results.Success
  */
 
 class Session extends Actor {
-  val executionCounter = new AtomicInteger(0)
 
   private var iopub: Option[WebSockWrapper] = None
   private val requests = Queue[ExecuteRequest]()
@@ -42,7 +44,7 @@ class Session extends Actor {
       if (res == Success)
         pub.send( header, session, "pyout", ("execution_count" -> counter) ~ ("data" -> ("text/plain" -> stdoutBytes.toString)))
       else
-        pub.send( header, session, "pyerr", ("execution_count" -> counter) ~ ("data" -> ("text/plain" -> stdoutBytes.toString)))
+        pub.send( header, session, "pyerr", ("status" -> "error") ~ ("ename" -> "Error") ~ ("traceback" -> Seq(stdoutBytes.toString)))
 
       stdoutBytes.reset()
       pub.send( header, session, "status", ("execution_state" -> "idle"))
@@ -50,9 +52,7 @@ class Session extends Actor {
     requests.clear()
   }
 
-  def act() {
-    loop {
-      react {
+  def receive =  {
         case IopubChannel(sock) =>
           iopub = Some(sock)
           checkRequest()
@@ -60,8 +60,6 @@ class Session extends Actor {
         case e:ExecuteRequest =>
           requests += e
           checkRequest()
-      }
-    }
   }
 }
 
