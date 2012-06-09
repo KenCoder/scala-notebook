@@ -26,7 +26,7 @@ class Session extends Actor {
   lazy val stdout = new PrintWriter(stdoutBytes)
   lazy val interp = {
     val settings = new Settings
-    settings.usejavacp.value = true
+    settings.embeddedDefaults[Session]
     val i = new IMain(settings, stdout)
     i.initializeSynchronous()
     i

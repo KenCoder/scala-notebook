@@ -1,6 +1,6 @@
-organization := "com.example"
+organization := "com.k2sw"
 
-name := "ScalaNB"
+name := "server"
 
 version := "0.1.0-SNAPSHOT"
 

@@ -141,7 +141,7 @@ class App(port:Int) {
     def palindrome(s: String) = s.toLowerCase.reverse == s.toLowerCase
     def view[T](req: HttpRequest[T], file: String, extra: (String, Any)*) = {
       val Params(params) = req
-      Scalate(req, file, (params.toSeq ++ extra): _*)
+      Scalate(req, "templates/" + file, (params.toSeq ++ extra): _*)
     }
   }
 }

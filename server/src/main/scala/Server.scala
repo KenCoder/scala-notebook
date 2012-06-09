@@ -4,6 +4,7 @@ import org.clapper.avsl.Logger
 import unfiltered.netty.websockets._
 import unfiltered.request.Path
 import java.net.URL
+import akka.actor.Actor
 
 /**
  * Author: Ken
@@ -15,6 +16,8 @@ object Server {
   val logger = Logger(Server.getClass)
 
   def main(args: Array[String]) {
+    println(System.getProperty("java.class.path"))
+
     val port = 8899
 
     val app: App = new App(port)
@@ -31,6 +34,7 @@ object Server {
     }, {
       svr =>
         logger.info("shutting down server")
+        app.system.shutdown()
     })
   }
 }
