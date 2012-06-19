@@ -35,8 +35,8 @@ class NotebookManager {
   def newNotebook = {
     val name = incrementFileName("Untitled")
     val nb = Notebook( Metadata(name), List(Worksheet(Nil)), None)
-    save(nb)
-    notebookId(name)
+    val id = notebookId(name)
+    save(id, nb)
   }
 
   def getNotebook(id: String) = {
@@ -49,18 +49,28 @@ class NotebookManager {
 
 
 
-  def save(nb: Notebook) {
+  def save(id: String, nb: Notebook) {
     FileUtils.writeStringToFile(notebookFile(nb.name), NBSerializer.write(nb))
+    // If there was an old file that's different, then delete it because this is a rename
+    for (oldName <- idToName.get(id)) {
+      if (notebookFile(nb.name).compareTo(notebookFile(oldName)) != 0)
+        notebookFile(oldName).delete()
+    }
+    associateIdToName(id, nb.name)
   }
 
   def load(name: String): Notebook = NBSerializer.read(FileUtils.readFileToString(notebookFile(name)))
 
+  private def associateIdToName(id: String, name:String) {
+    idToName.put(id, name)
+    nameToId.put(name, id)
+  }
   val nameToId = collection.mutable.Map[String, String]()
   val idToName = collection.mutable.Map[String, String]()
 
-  def notebookId(name: String) = nameToId.getOrElseUpdate(name, {
+  def notebookId(name: String) = nameToId.getOrElse(name, {
     val id = UUID.randomUUID.toString
-    idToName += id -> name
+    associateIdToName(id, name)
     id
   })
 }

@@ -20,7 +20,7 @@ object Server {
 
     val port = 8899
 
-    val app: App = new App(port)
+    val app: Dispatcher = new Dispatcher(port)
 
     val wsPlan = unfiltered.netty.websockets.Planify (app.WebSockets.intent).onPass(_.sendUpstream(_))
     val pagePlan1 = unfiltered.netty.cycle.Planify(app.WebServer.nbIntent)

@@ -17,6 +17,8 @@ object NBSerializer {
   trait Cell
   case class CodeCell(input: String, language: String, collapsed: Boolean,prompt_number:Option[Int], outputs: List[Output]) extends Cell
   case class MarkdownCell(source: String) extends Cell
+  case class RawCell(source: String) extends Cell
+  case class HeadingCell(source: String, level: Int) extends Cell
   case class Metadata(name: String)
   case class Worksheet(cells: List[Cell])
   case class Notebook(metadata: Metadata, worksheets: List[Worksheet], nbformat: Option[Int]) {
@@ -30,8 +32,12 @@ object NBSerializer {
   }
 
 
-  implicit val formats = Serialization.formats(NBTypeHints(List(classOf[CodeCell], classOf[MarkdownCell], classOf[ScalaOutput], classOf[ScalaError])))
-  val translations = List( ("cell_type", "code", "CodeCell"), ("cell_type", "markdown", "MarkdownCell"), ("output_type", "pyout", "ScalaOutput"))
+  implicit val formats = Serialization.formats(NBTypeHints(List(classOf[CodeCell], classOf[MarkdownCell], classOf[ScalaOutput], classOf[ScalaError], classOf[RawCell], classOf[HeadingCell])))
+  val translations = List( ("cell_type", "code", "CodeCell"),
+                    ("cell_type", "markdown", "MarkdownCell"),
+    ("cell_type", "raw", "RawCell"),
+    ("cell_type", "heading", "HeadingCell"),
+    ("output_type", "pyout", "ScalaOutput"))
 
   def write(nb: Notebook): String = {
     val json = Extraction.decompose(nb)
