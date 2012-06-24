@@ -1,11 +1,12 @@
 package com.k2sw.scalanb
 
+import client.DefaultKernelRunner
 import org.clapper.avsl.Logger
 import unfiltered.netty.websockets._
 import unfiltered.request.Path
 import java.net.URL
 import akka.actor.Actor
-
+import scala.concurrent.ops._
 /**
  * Author: Ken
  */
@@ -20,6 +21,9 @@ object Server {
 
     val port = 8899
 
+    spawn {
+      new DefaultKernelRunner().run()
+    }
     val app: Dispatcher = new Dispatcher(port)
 
     val wsPlan = unfiltered.netty.websockets.Planify (app.WebSockets.intent).onPass(_.sendUpstream(_))

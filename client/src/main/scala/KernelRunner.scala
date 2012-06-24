@@ -1,4 +1,6 @@
-import akka.actor.Props
+package com.k2sw.scalanb
+package client
+
 import java.net.URLClassLoader
 
 /**
@@ -11,7 +13,7 @@ trait NotebookKernelProvider {
   def mainClass: String
 }
 
-class KernelRunner extends NotebookKernelProvider {
+trait KernelRunner extends NotebookKernelProvider {
   val EXIT_RESTART = 100
 
   /**
@@ -21,8 +23,10 @@ class KernelRunner extends NotebookKernelProvider {
     val javaHome = System.getProperty("java.home")
     var more = true
     while (more) {
-      val running = new ProcessBuilder(javaHome + "/bin/java.exe", "-cp",
-        classPath.mkString(System.getProperty("path.separator")), "-Xmx" + memory, mainClass).start()
+      val pb = new ProcessBuilder(javaHome + "/bin/java.exe", "-cp",
+        classPath.mkString(System.getProperty("path.separator")), "-Xmx" + memory, mainClass)
+      println(pb.command())
+      val running = pb.start()
       val retCode = running.waitFor()
       more = retCode == EXIT_RESTART
     }
@@ -33,10 +37,8 @@ class KernelRunner extends NotebookKernelProvider {
 class DefaultKernelRunner extends KernelRunner {
   def classPath: Seq[String] = {
     val loader = getClass().getClassLoader.asInstanceOf[URLClassLoader]
-    println("Classpath is " + loader.getURLs.mkString(","))
-    println("Client is running - press Enter to quit")
-
+    loader.getURLs map { _.toExternalForm }
   }
-  def memory: String
-
+  def memory: String = "1200m"
+  def mainClass = classOf[NotebookClient].getName
 }
