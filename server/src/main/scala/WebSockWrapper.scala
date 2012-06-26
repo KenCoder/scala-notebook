@@ -5,14 +5,16 @@ import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
+import org.clapper.avsl.Logger
 
 /**
  * Author: Ken
  */
 
 class WebSockWrapper(val sock: WebSocket) {
+  val logger = Logger(classOf[Dispatcher])
   def send(msg: String) {
-    println("Sending " + msg)
+    logger.debug("Sending " + msg)
     sock.send(msg)
   }
 
@@ -28,6 +30,4 @@ class WebSockWrapper(val sock: WebSocket) {
 
     send(pretty(render(respJson)))
   }
-
-
 }

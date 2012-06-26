@@ -32,12 +32,12 @@ class Dispatcher(webSockPort:Int) {
     val intent: unfiltered.netty.websockets.Plan.Intent =     {
       case req@Path(Seg("kernels" :: kernel :: channel :: Nil)) => {
           case Open(websock) =>
-          println("Opening Socket" + channel + " for " + kernel + " to " + websock)
+          logger.info("Opening Socket" + channel + " for " + kernel + " to " + websock)
           if (channel == "iopub")
             get(kernel) ! IopubChannel(new WebSockWrapper(websock))
 
         case Message(s, Text(msg)) =>
-          println("Message for " + kernel + ":" + msg)
+          logger.debug("Message for " + kernel + ":" + msg)
 
           val json = parse(msg)
           for {

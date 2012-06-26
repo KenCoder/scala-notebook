@@ -2,6 +2,8 @@ package com.k2sw.scalanb
 package client
 
 import java.net.URLClassLoader
+import org.apache.commons.exec.{DefaultExecutor, CommandLine}
+import org.clapper.avsl.Logger
 
 /**
  * Given a classpath, runs a kernel process and monitors the result. When it dies, we examine the result to decide
@@ -14,6 +16,8 @@ trait NotebookKernelProvider {
 }
 
 trait KernelRunner extends NotebookKernelProvider {
+  val logger = Logger(classOf[KernelRunner])
+
   val EXIT_RESTART = 100
 
   /**
@@ -23,11 +27,13 @@ trait KernelRunner extends NotebookKernelProvider {
     val javaHome = System.getProperty("java.home")
     var more = true
     while (more) {
-      val pb = new ProcessBuilder(javaHome + "/bin/java.exe", "-cp",
-        classPath.mkString(System.getProperty("path.separator")), "-Xmx" + memory, mainClass)
-      println(pb.command())
-      val running = pb.start()
-      val retCode = running.waitFor()
+      val cmd =new CommandLine(javaHome + "/bin/java.exe").addArgument("-cp")
+      .addArgument(classPath.mkString(System.getProperty("path.separator")))
+      .addArgument("-Xmx" + memory)
+      .addArgument(mainClass)
+      logger.debug(cmd)
+     val exec = new DefaultExecutor
+      val retCode = exec.execute(cmd)
       more = retCode == EXIT_RESTART
     }
   }

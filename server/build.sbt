@@ -24,6 +24,10 @@ libraryDependencies += "com.typesafe.akka" % "akka-remote" % "2.0.2"
 
 libraryDependencies += "org.apache.commons" % "commons-exec" % "1.1"
 
+libraryDependencies += "org.clapper" %% "grizzled-slf4j" % "0.6.9"
+
 resolvers ++= Seq(
   "java m2" at "http://download.java.net/maven/2"
 )
+
+resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
