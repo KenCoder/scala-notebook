@@ -1,19 +1,11 @@
 package com.k2sw.scalanb
 
 import akka.actor._
-import akka.routing.RoundRobinRouter
-import akka.util.Duration
-import akka.util.duration._
-import client.{ErrorResponse, ExecuteResponse, ExecuteRequest, NotebookKernel}
-import unfiltered.netty.websockets.WebSocket
+import client._
 import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
 import collection.mutable.Queue
-import java.util.concurrent.atomic.AtomicInteger
-import java.io.{ByteArrayOutputStream, PrintWriter}
-import tools.nsc.interpreter.IMain
-import tools.nsc.Settings
-import tools.nsc.interpreter.Results.Success
+import concurrent.ops._
 
 /**
  * Author: Ken
@@ -22,22 +14,24 @@ import tools.nsc.interpreter.Results.Success
 class Session extends Actor {
 
   private var iopub: Option[WebSockWrapper] = None
+  private var kernel: Option[ActorRef] = None
+
   private val requests = Queue[SessionRequest]()
 
   val executingRequests = Queue[SessionRequest]()
 
-  lazy val kernel = context.actorOf(Props[NotebookKernel], name = "kernel")
-
   def checkRequest() {
     for {
       pub <- iopub
+      k <- kernel
       req@SessionRequest(header, session, counter, code) <- requests
     } {
+
       pub.send( header, session, "status", ("execution_state" -> "busy"))
       pub.send( header, session, "pyin", ("execution_count" -> counter) ~ ("code" -> code))
 
       executingRequests += req
-      kernel ! ExecuteRequest(code)
+      k ! ExecuteRequest(code, context.self)
     }
     requests.clear()
   }
@@ -45,6 +39,11 @@ class Session extends Actor {
   def receive =  {
         case IopubChannel(sock) =>
           iopub = Some(sock)
+          KernelServerNotifier.connector = context.self
+          spawn {
+            new DefaultKernelRunner().run()
+          }
+
           checkRequest()
 
         case e:SessionRequest =>

@@ -7,6 +7,9 @@ import unfiltered.request.Path
 import java.net.URL
 import akka.actor.Actor
 import scala.concurrent.ops._
+import org.apache.commons.io.FileUtils
+import java.io.File
+
 /**
  * Author: Ken
  */
@@ -14,10 +17,14 @@ import scala.concurrent.ops._
 
 /**embedded server */
 object Server {
+  // TODO: This should be somewhere in avsl
+  FileUtils.forceMkdir(new File("logs"))
+
   val logger = Logger(Server.getClass)
 
   def main(args: Array[String]) {
     println(System.getProperty("java.class.path"))
+
 
     val port = 8899
 
