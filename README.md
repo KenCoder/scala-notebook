@@ -44,3 +44,48 @@ To that end, the project is organized as follows:
 * *common* are the classes shared by both
 
 
+Okay, You're Going To Need Some Stuff
+-------------------------------
+
+* Checkout this project
+* You're going to need sbt.  These instructions are for Mac because I'm on a Mac.
+	* Install homebrew (its website is prettier than macports)
+		
+		https://github.com/mxcl/homebrew/wiki/installation 
+		
+	* Install sbt.  At Terminal, type:
+	
+		`brew install sbt`	
+		
+	* You'll need the gen-idea plugin for SBT.  It creates IntelliJ project files that go along with the SBT project automatically.
+	
+		* Create the file: `~/.sbt/plugins/build.sbt`
+		* Add this line into it:
+		
+		`addSbtPlugin("com.github.mpeltonen" % "sbt-idea" % "1.0.0")`
+		
+	* Go to the root of where you checked it out and type:
+	
+	`sbt gen-idea`
+	* Now you can open the project in IntelliJ
+
+To run this bad boy:
+
+1. Go to root folder
+2. Fire up sbt
+   `sbt` 
+3. Once sbt sarts:
+
+   `> projects`
+   
+   will list all the projects (you should see client, server, etc.)
+4.  Start the server.  Select the server project:
+
+    `> project server`
+    
+    and run:
+    
+    `> run`
+    
+    The notebook management page should pop up.  You can create a new notebook and start playing!	
+			
