@@ -42,24 +42,24 @@ class Session extends Actor {
     requests.clear()
   }
 
-  def receive =  {
-        case IopubChannel(sock) =>
-          iopub = Some(sock)
-          checkRequest()
+  def receive = {
+    case IopubChannel(sock) =>
+      iopub = Some(sock)
+      checkRequest()
 
-        case e:SessionRequest =>
-          requests += e
-          checkRequest()
+    case e:SessionRequest =>
+      requests += e
+      checkRequest()
 
-        case ExecuteResponse(msg) =>
-          val SessionRequest(header, session, counter, _) = executingRequests.dequeue()
-          iopub.get.send( header, session, "pyout", ("execution_count" -> counter) ~ ("data" -> ("text/plain" -> msg)))
-          iopub.get.send( header, session, "status", ("execution_state" -> "idle"))
+    case ExecuteResponse(msg) =>
+      val SessionRequest(header, session, counter, _) = executingRequests.dequeue()
+      iopub.get.send(header, session, "pyout", ("execution_count" -> counter) ~ ("data" -> ("text/html" -> msg)))
+      iopub.get.send(header, session, "status", ("execution_state" -> "idle"))
 
-        case ErrorResponse(msg) =>
-          val SessionRequest(header, session, _, _) = executingRequests.dequeue()
-          iopub.get.send( header, session, "pyerr", ("status" -> "error") ~ ("ename" -> "Error") ~ ("traceback" -> Seq(msg)))
-          iopub.get.send( header, session, "status", ("execution_state" -> "idle"))
+    case ErrorResponse(msg) =>
+      val SessionRequest(header, session, _, _) = executingRequests.dequeue()
+      iopub.get.send( header, session, "pyerr", ("status" -> "error") ~ ("ename" -> "Error") ~ ("traceback" -> Seq(msg)))
+      iopub.get.send( header, session, "status", ("execution_state" -> "idle"))
   }
 }
 
