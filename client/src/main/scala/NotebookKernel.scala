@@ -12,6 +12,8 @@ import tools.nsc.interpreter.IMain
  */
 
 
+case class StreamResponse(data: String, name: String)
+
 case class ExecuteRequest(code: String)
 
 case class ExecuteResponse(stdout: String)
@@ -22,7 +24,27 @@ case object InterruptRequest
 
 
 class NotebookKernel extends Actor {
-  lazy val stdoutBytes = new ByteArrayOutputStream()
+
+  lazy val stdoutBytes = new ByteArrayOutputStream() {
+    override def write(i: Int): Unit = {
+      // CY: Not used...
+      sender ! StreamResponse(i.toString, "stdout")
+      super.write(i)
+    }
+
+    override def write(bytes: Array[Byte]): Unit = {
+      // CY: Not used...
+      sender ! StreamResponse(bytes.toString, "stdout")
+      super.write(bytes)
+    }
+
+    override def write(bytes: Array[Byte], off: Int, length: Int): Unit = {
+      val data = new String(bytes, off, length)
+      sender ! StreamResponse(data, "stdout")
+      super.write(bytes, off, length)
+    }
+  }
+
   lazy val stdout = new PrintWriter(stdoutBytes)
 
   lazy val interp = {

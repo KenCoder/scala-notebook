@@ -844,10 +844,12 @@ var IPython = (function (IPython) {
         if (this.showInput) {
             this.element.find('div.input').hide();
             this.element.find('div.output_prompt').hide();
+            this.element.find('div.output_stream').parent().hide();
             this.showInput = false;
         } else {
             this.element.find('div.input').show();
             this.element.find('div.output_prompt').show();
+            this.element.find('div.output_stream').parent().show();
             this.showInput = true;
         };
     };
