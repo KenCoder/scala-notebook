@@ -1,0 +1,2 @@
+- SBT copies templates etc. into output folder whereas IntelliJ runs direclty in project
+- If you leave a notebook page, you can't go back to any other notebook page
