@@ -120,6 +120,7 @@ data-notebook-id=${notebook_id}
                 <hr/>
                 <li id="toggle_output"><a href="#">Toggle Output</a></li>
                 <li id="clear_all_output"><a href="#">Clear All Output</a></li>
+                <li id="toggle_input"><a href="#">Toggle Input</a></li>
             </ul>
         </li>
         <li><a href="#">Kernel</a>

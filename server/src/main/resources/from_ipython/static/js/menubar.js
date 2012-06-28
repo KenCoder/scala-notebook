@@ -157,6 +157,9 @@ var IPython = (function (IPython) {
         this.element.find('#clear_all_output').click(function () {
             IPython.notebook.clear_all_output();
         });
+        this.element.find('#toggle_input').click(function () {
+            IPython.notebook.toggle_input();
+        });
         // Kernel
         this.element.find('#int_kernel').click(function () {
             IPython.notebook.kernel.interrupt();

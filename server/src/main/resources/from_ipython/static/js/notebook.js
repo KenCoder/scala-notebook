@@ -852,6 +852,11 @@ var IPython = (function (IPython) {
         this.dirty = true;
     };
 
+    Notebook.prototype.toggle_input = function (index) {
+        var i = this.index_or_selected(index);
+        this.get_cell(i).toggle_input();
+        this.dirty = true;
+    };
 
     Notebook.prototype.set_timebeforetooltip = function (time) {
         this.time_before_tooltip = time;

@@ -20,6 +20,7 @@ var IPython = (function (IPython) {
         this.completion_cursor = null;
         this.outputs = [];
         this.collapsed = false;
+        this.showInput = true;
         this.tooltip_timeout = null;
         this.clear_out_timeout = null;
         IPython.Cell.apply(this, arguments);
@@ -836,6 +837,18 @@ var IPython = (function (IPython) {
             this.expand();
         } else {
             this.collapse();
+        };
+    };
+
+    CodeCell.prototype.toggle_input = function () {
+        if (this.showInput) {
+            this.element.find('div.input').hide();
+            this.element.find('div.output_prompt').hide();
+            this.showInput = false;
+        } else {
+            this.element.find('div.input').show();
+            this.element.find('div.output_prompt').show();
+            this.showInput = true;
         };
     };
 
