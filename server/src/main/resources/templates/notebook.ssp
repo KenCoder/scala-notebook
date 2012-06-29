@@ -210,6 +210,7 @@ data-notebook-id=${notebook_id}
 <script src="${static_url("codemirror/mode/css/css.js")}" charset="utf-8"></script>
 <script src="${static_url("codemirror/mode/rst/rst.js")}" charset="utf-8"></script>
 <script src="${static_url("codemirror/mode/markdown/markdown.js")}" charset="utf-8"></script>
+<script src="${static_url("codemirror/mode/clike/clike.js")}" charset="utf-8"></script>
 
 <script src="${static_url("pagedown/Markdown.Converter.js")}" charset="utf-8"></script>
 

@@ -37,8 +37,8 @@ var IPython = (function (IPython) {
         input.append($('<div/>').addClass('prompt input_prompt'));
         var input_area = $('<div/>').addClass('input_area box-flex1');
         this.code_mirror = CodeMirror(input_area.get(0), {
-            indentUnit : 4,
-            mode: 'python',
+            // indentUnit : 4,
+            mode: 'text/x-scala',
             theme: 'ipython',
             readOnly: this.read_only,
             onKeyEvent: $.proxy(this.handle_codemirror_keyevent,this)
