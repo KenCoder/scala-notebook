@@ -41,7 +41,7 @@ class App(port:Int) {
 
   val sessions = collection.mutable.Map[String, ActorRef]()
   def get(kernel: String) = {
-    sessions.getOrElseUpdate(kernel, system.actorOf(Props[Session], name = "session"))
+    sessions.getOrElseUpdate(kernel, system.actorOf(Props[Session], name = "session/" + kernel))
   }
 
   object WebSockets {
@@ -78,6 +78,9 @@ class App(port:Int) {
 
         case Close(websock) =>
           println("Closing Socket " + websock)
+          // stop the actor
+          val session = get(kernel)
+          system.stop(session)
           sessions -= kernel
 
         case Error(s, e) =>
@@ -141,7 +144,10 @@ class App(port:Int) {
     def palindrome(s: String) = s.toLowerCase.reverse == s.toLowerCase
     def view[T](req: HttpRequest[T], file: String, extra: (String, Any)*) = {
       val Params(params) = req
-      Scalate(req, "templates/" + file, (params.toSeq ++ extra): _*)
+//      Scalate(req, "templates/" + file, (params.toSeq ++ extra): _*)
+      // CY: Hack becuase IntelliJ doesn't copy the resource dir into
+      // the output folder the way SBT does
+      Scalate(req, file, (params.toSeq ++ extra): _*)
     }
   }
 }
