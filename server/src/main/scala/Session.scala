@@ -4,7 +4,7 @@ import akka.actor._
 import akka.routing.RoundRobinRouter
 import akka.util.Duration
 import akka.util.duration._
-import client.{ErrorResponse, ExecuteResponse, ExecuteRequest, NotebookKernel}
+import client.{ErrorResponse, ExecuteResponse, ExecuteRequest, NotebookKernel, StreamResponse}
 import unfiltered.netty.websockets.WebSocket
 import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
@@ -56,10 +56,15 @@ class Session extends Actor {
       iopub.get.send(header, session, "pyout", ("execution_count" -> counter) ~ ("data" -> ("text/html" -> msg)))
       iopub.get.send(header, session, "status", ("execution_state" -> "idle"))
 
+    case StreamResponse(data, name) =>
+      val SessionRequest(header, session, counter, _) = executingRequests.front
+      iopub.get.send(header, session, "stream", ("execution_count" -> counter) ~ ("data" -> data) ~ ("name" -> name))
+
     case ErrorResponse(msg) =>
       val SessionRequest(header, session, _, _) = executingRequests.dequeue()
       iopub.get.send( header, session, "pyerr", ("status" -> "error") ~ ("ename" -> "Error") ~ ("traceback" -> Seq(msg)))
       iopub.get.send( header, session, "status", ("execution_state" -> "idle"))
+
   }
 }
 
