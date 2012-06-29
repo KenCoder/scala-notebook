@@ -41,7 +41,7 @@ class App(port:Int) {
 
   val sessions = collection.mutable.Map[String, ActorRef]()
   def get(kernel: String) = {
-    sessions.getOrElseUpdate(kernel, system.actorOf(Props[Session], name = "session/" + kernel))
+    sessions.getOrElseUpdate(kernel, system.actorOf(Props[Session], name = "session_" + kernel))
   }
 
   object WebSockets {
