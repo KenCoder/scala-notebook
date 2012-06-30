@@ -28,9 +28,6 @@ object Server {
 
     val port = 8899
 
-    spawn {
-      new DefaultKernelRunner().run()
-    }
     val app: Dispatcher = new Dispatcher(port)
 
     val wsPlan = unfiltered.netty.websockets.Planify (app.WebSockets.intent).onPass(_.sendUpstream(_))
