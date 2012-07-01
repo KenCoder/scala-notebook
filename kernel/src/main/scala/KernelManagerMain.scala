@@ -14,32 +14,20 @@ import org.clapper.avsl.Logger
  * Author: Ken
  *
  * Server                 Client
- *    KernelConnector
- *           creates
- *    KernelRunner
+ *    KernelManager
  *           spawns
- *                          KernelMain
+ *    Kernel
  *           creates
- *                          Kernel
- *           creates
- *   KernelServerNotifier
- *           sends ptr back to
- *   KernelConnector
- *           sends request to
- *                          Kernel
- *            creates
- *                          ScalaKernel
+ *    ScalaKernel
  */
 
-object KernelMain {
-  lazy val system = ActorSystem("NotebookClient")
+object KernelManagerMain {
+  lazy val system = ActorSystem("KernelManager")
   val EXIT_RESTART = 100
 
   var kernelInClient: Option[ActorRef] = None
 
   def main(args: Array[String]) {
-    val loader = getClass().getClassLoader.asInstanceOf[URLClassLoader]
-    println("Classpath is " + loader.getURLs.mkString(","))
     system.actorOf(Props[Kernel], name = "kernel")
     println("Client is running - press Enter to quit")
     Console.readLine()
@@ -48,16 +36,8 @@ object KernelMain {
 }
 
 
-object KernelServerNotifier {
-  // Assigned by KernelConnector before it spawns. The KernelServerNotifier sends notice of the client kernel
-  // when it is constructed.
-  var connector: ActorRef = null
-}
 // Runs in the server process, to register the kernelInClient
-class KernelServerNotifier extends Actor {
-  override def preStart {
-    KernelServerNotifier.connector ! ClientKernelStartup(context.parent)
-  }
+class KernelManager extends Actor {
 
   def receive = {
     case _ => sys.error("Unexpected message for KernelServerNotifier")
@@ -74,7 +54,7 @@ class Kernel extends Actor {
 
   def receive = {
     case msg@ExecuteRequest(code, sender) => scalaKernel ! msg
-    case InterruptRequest => System.exit(KernelMain.EXIT_RESTART)
+    case InterruptRequest => System.exit(KernelManagerMain.EXIT_RESTART)
   }
 }
 
