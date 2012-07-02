@@ -125,6 +125,7 @@ div.code_cell {
 }
 /* any special styling for code cells that are currently running goes here */
 div.code_cell.running {
+    background-color: grey;
 }
 
 div.prompt {

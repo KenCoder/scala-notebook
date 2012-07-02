@@ -2,7 +2,8 @@ package com.k2sw.scalanb.client
 
 import akka.actor.Actor
 import tools.nsc.Settings
-import tools.nsc.interpreter.HackIMain
+import tools.nsc.interpreter.{HackIMain, JLineCompletion}
+import tools.nsc.interpreter.Completion.{ScalaCompleter, Candidates}
 import java.io.{PrintWriter, ByteArrayOutputStream}
 import tools.nsc.interpreter.Results.Success
 import tools.nsc.interpreter.IMain
@@ -21,6 +22,10 @@ case class ExecuteResponse(stdout: String)
 case class ErrorResponse(message: String)
 
 case object InterruptRequest
+
+case class CompletionRequest(line: String, cursorPosition: Int)
+
+case class CompletionResponse(cursorPosition: Int, candidates: List[String], matchedText: String)
 
 
 class NotebookKernel extends Actor {
@@ -57,6 +62,9 @@ class NotebookKernel extends Actor {
     i.initializeSynchronous()
     i
   }
+
+  lazy val completer: ScalaCompleter = new JLineCompletion(interp).completer()
+
   def receive = {
     case ExecuteRequest(code) =>
       stdout.flush()
@@ -88,5 +96,11 @@ class NotebookKernel extends Actor {
         sender ! ExecuteResponse(valueToSend)
       } else
         sender ! ErrorResponse(stdoutBytes.toString)
+
+    case CompletionRequest(line, cursorPosition) =>
+        val Candidates(newCursor, candidates) = completer.complete(line, cursorPosition)
+        sender ! CompletionResponse(newCursor, candidates, line.substring(cursorPosition))
+
+
   }
 }
