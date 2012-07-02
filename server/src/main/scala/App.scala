@@ -136,6 +136,11 @@ class App(port:Int) {
           "notebook_id" -> id,
           "project" -> nbm.notebookDir.getPath)
 
+      case req@Path(Seg(id :: "print" :: Nil)) =>
+        view(req, "printnotebook.ssp",
+          "notebook_id" -> id,
+          "project" -> nbm.notebookDir.getPath)
+
       case req@POST(Path(p) & Params(params)) =>
         println("post passing")
         Pass
