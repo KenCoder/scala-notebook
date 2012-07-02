@@ -36,6 +36,7 @@ object NBSerializer {
     ("cell_type", "code", "CodeCell"),
     ("cell_type", "markdown", "MarkdownCell"),
     ("output_type", "pyout", "ScalaOutput"),
+    ("output_type", "pyerr", "ScalaError"),
     ("output_type", "stream", "ScalaStream")
   )
 
