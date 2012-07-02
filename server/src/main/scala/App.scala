@@ -15,7 +15,7 @@ import org.jboss.netty.handler.codec.http.HttpHeaders
 import java.util.UUID
 import akka.actor.{ActorRef, Props, ActorSystem}
 import java.util.concurrent.atomic.AtomicInteger
-import com.k2sw.scalanb.client.CompletionRequest
+import client.{ExecuteRequest, CompletionRequest}
 
 /** unfiltered plan */
 class App(port:Int) {
@@ -75,7 +75,7 @@ class App(port:Int) {
                 for (JField("code", JString(code)) <- content) {
                   val kern = get(kernel)
                   val execCounter = executionCounter.incrementAndGet()
-                  kern ! SessionRequest(header, session, execCounter, code)
+                  kern ! SessionRequest(header, session, ExecuteRequest(execCounter, code))
                 }
               }
 
@@ -84,7 +84,7 @@ class App(port:Int) {
                      JField("cursor_pos", JInt(cursorPos)) <- content) {
 
                   val kern = get(kernel)
-                  kern ! CompletionRequest(line, cursorPos.toInt)
+                  kern ! SessionRequest(header, session, CompletionRequest(line, cursorPos.toInt))
                 }
               }
             }

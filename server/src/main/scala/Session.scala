@@ -39,14 +39,21 @@ class Session extends Actor {
   def checkRequest() {
     for {
       pub <- iopub
-      req@SessionRequest(header, session, counter, code) <- requests
+      req@SessionRequest(header, session, kernelRequest) <- requests
     } {
-      pub.send( header, session, "status", ("execution_state" -> "busy"))
-      pub.send( header, session, "pyin", ("execution_count" -> counter) ~ ("code" -> code))
-
       executingRequests += req
-      kernel ! ExecuteRequest(code)
+
+      kernelRequest match {
+        case exec@ExecuteRequest(counter, code) =>
+          pub.send( header, session, "status", ("execution_state" -> "busy"))
+          pub.send( header, session, "pyin", ("execution_count" -> counter) ~ ("code" -> code))
+          kernel ! exec
+
+        case completion: CompletionRequest =>
+          kernel ! completion
+      }
     }
+
     requests.clear()
   }
 
@@ -63,31 +70,29 @@ class Session extends Actor {
       requests += e
       checkRequest()
 
-    case e:CompletionRequest =>
-      kernel ! e
-
     case ExecuteResponse(msg) =>
-      val SessionRequest(header, session, counter, _) = executingRequests.dequeue()
+      val SessionRequest(header, session, ExecuteRequest(counter, _)) = executingRequests.dequeue()
       iopub.get.send(header, session, "pyout", ("execution_count" -> counter) ~ ("data" -> ("text/html" -> msg)))
       iopub.get.send(header, session, "status", ("execution_state" -> "idle"))
       shell.get.send(header, session, "execute_reply", ("execution_count" -> counter))
 
     case StreamResponse(data, name) =>
-      val SessionRequest(header, session, counter, _) = executingRequests.front
-      iopub.get.send(header, session, "stream", ("execution_count" -> counter) ~ ("data" -> data) ~ ("name" -> name))
+      val SessionRequest(header, session, _) = executingRequests.front
+      iopub.get.send(header, session, "stream", ("data" -> data) ~ ("name" -> name))
 
     case ErrorResponse(msg) =>
-      val SessionRequest(header, session, _, _) = executingRequests.dequeue()
+      val SessionRequest(header, session, _) = executingRequests.dequeue()
       iopub.get.send( header, session, "pyerr", ("status" -> "error") ~ ("ename" -> "Error") ~ ("traceback" -> Seq(msg)))
       iopub.get.send( header, session, "status", ("execution_state" -> "idle"))
 
     case CompletionResponse(cursorPosition, candidates, matchedText) =>
-      shell.get.send(JNull, JNull, "complete_reply", ("matched_text" -> matchedText))
+      val SessionRequest(header, session, CompletionRequest(_, _)) = executingRequests.dequeue()
+      shell.get.send(header, session, "complete_reply", ("matched_text" -> matchedText) ~ ("matches" -> candidates))
 
   }
 }
 
 
-case class SessionRequest(header: JValue, session: JValue, counter: Int, code: String)
+case class SessionRequest(header: JValue, session: JValue, kernelRequest: KernelRequest)
 case class IopubChannel(sock: WebSockWrapper)
 case class ShellChannel(sock: WebSockWrapper)

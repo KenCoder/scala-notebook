@@ -12,18 +12,17 @@ import tools.nsc.interpreter.IMain
  * Author: Ken
  */
 
+trait KernelRequest
+
+case class ExecuteRequest(counter: Int, code: String) extends KernelRequest
+case object InterruptRequest extends KernelRequest
+case class CompletionRequest(line: String, cursorPosition: Int) extends KernelRequest
 
 case class StreamResponse(data: String, name: String)
-
-case class ExecuteRequest(code: String)
 
 case class ExecuteResponse(stdout: String)
 
 case class ErrorResponse(message: String)
-
-case object InterruptRequest
-
-case class CompletionRequest(line: String, cursorPosition: Int)
 
 case class CompletionResponse(cursorPosition: Int, candidates: List[String], matchedText: String)
 
@@ -66,7 +65,7 @@ class NotebookKernel extends Actor {
   lazy val completer: ScalaCompleter = new JLineCompletion(interp).completer()
 
   def receive = {
-    case ExecuteRequest(code) =>
+    case ExecuteRequest(_, code) =>
       stdout.flush()
       stdoutBytes.reset()
       // capture stdout if the code the user wrote was a println, for example
@@ -99,7 +98,7 @@ class NotebookKernel extends Actor {
 
     case CompletionRequest(line, cursorPosition) =>
         val Candidates(newCursor, candidates) = completer.complete(line, cursorPosition)
-        sender ! CompletionResponse(newCursor, candidates, line.substring(cursorPosition))
+        sender ! CompletionResponse(newCursor, candidates, line.substring(0, cursorPosition))
 
 
   }
