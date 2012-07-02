@@ -11,8 +11,9 @@ import net.liftweb.json.Serialization
 
 object NBSerializer {
   trait Output
-  case class ScalaOutput(prompt_number: Int, text: String) extends Output
+  case class ScalaOutput(prompt_number: Int, html: Option[String], text: Option[String]) extends Output
   case class ScalaError(prompt_number: Int, text: String) extends Output
+  case class ScalaStream(text: String, stream: String) extends Output
 
   trait Cell
   case class CodeCell(input: String, language: String, collapsed: Boolean,prompt_number:Option[Int], outputs: List[Output]) extends Cell
@@ -30,8 +31,13 @@ object NBSerializer {
   }
 
 
-  implicit val formats = Serialization.formats(NBTypeHints(List(classOf[CodeCell], classOf[MarkdownCell], classOf[ScalaOutput], classOf[ScalaError])))
-  val translations = List( ("cell_type", "code", "CodeCell"), ("cell_type", "markdown", "MarkdownCell"), ("output_type", "pyout", "ScalaOutput"))
+  implicit val formats = Serialization.formats(NBTypeHints(List(classOf[CodeCell], classOf[MarkdownCell], classOf[ScalaOutput], classOf[ScalaError], classOf[ScalaStream])))
+  val translations = List(
+    ("cell_type", "code", "CodeCell"),
+    ("cell_type", "markdown", "MarkdownCell"),
+    ("output_type", "pyout", "ScalaOutput"),
+    ("output_type", "stream", "ScalaStream")
+  )
 
   def write(nb: Notebook): String = {
     val json = Extraction.decompose(nb)
@@ -48,7 +54,7 @@ object NBSerializer {
   def read(s: String): Notebook = {
     val json = parse(s)
     val mapped = json transform {
-      case JField(typ, JString(cat)) if (translations exists { _._1 == typ}) =>
+      case JField(typ, JString(cat)) if (translations exists { x => x._1 == typ && x._2 == cat }) =>
         val (_, _, clazz) = (translations filter { x => x._1 == typ && x._2 == cat }).head
         JField("jsonClass", JString(clazz))
     }
