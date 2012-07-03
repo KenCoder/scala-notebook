@@ -1,5 +1,6 @@
 package com.k2sw.scalanb
 
+import client.ActorSpawner
 import unfiltered.request._
 import unfiltered.response._
 
@@ -20,11 +21,12 @@ class Dispatcher(webSockPort:Int) {
 
   val nbm = new NotebookManager()
   val system = ActorSystem("NotebookServer")
+  val spawner = system.actorOf(Props[ActorSpawner])
   val km = new KernelManager
 
   val sessions = collection.mutable.Map[String, ActorRef]()
   def get(kernel: String) = {
-    sessions.getOrElseUpdate(kernel, system.actorOf(Props[Session], name = "session"))
+    sessions.getOrElseUpdate(kernel, system.actorOf(Props(new Session(spawner)), name = "session"))
   }
 
   object WebSockets {

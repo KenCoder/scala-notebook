@@ -12,7 +12,7 @@ import akka.actor.{ActorRef, Actor}
  */
 
 
-case class ExecuteRequest(code: String, sender: ActorRef)
+case class ExecuteRequest(code: String)
 
 case class ExecuteResponse(stdout: String)
 
@@ -20,4 +20,28 @@ case class ErrorResponse(message: String)
 
 case object InterruptRequest
 
-case class ClientKernelStartup(kernel: ActorRef)
+
+class ScalaKernel extends Actor {
+  lazy val stdoutBytes = new ByteArrayOutputStream()
+  lazy val stdout = new PrintWriter(stdoutBytes)
+
+  lazy val interp = {
+    val settings = new Settings
+    settings.embeddedDefaults[ScalaKernel]
+    settings.usejavacp.tryToSetFromPropertyValue("true")
+    val i = new IMain(settings, stdout)
+    i.initializeSynchronous()
+    i
+  }
+
+  def receive() = {
+    case ExecuteRequest(code) =>
+      val res = interp.interpret(code)
+      stdout.flush()
+      if (res == Success)
+        sender ! ExecuteResponse(stdoutBytes.toString)
+      else
+        sender ! Seq(stdoutBytes.toString)
+      stdoutBytes.reset()
+  }
+}

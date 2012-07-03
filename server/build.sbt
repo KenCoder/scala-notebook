@@ -26,6 +26,8 @@ libraryDependencies += "org.apache.commons" % "commons-exec" % "1.1"
 
 libraryDependencies += "org.clapper" %% "grizzled-slf4j" % "0.6.9"
 
+libraryDependencies += "com.typesafe.akka" % "akka-slf4j" % "2.0.2"
+
 resolvers ++= Seq(
   "java m2" at "http://download.java.net/maven/2"
 )

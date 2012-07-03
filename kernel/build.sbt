@@ -13,6 +13,8 @@ libraryDependencies ++= Seq(
 )
 
 
+libraryDependencies += "org.scala-lang" % "scala-compiler" % "2.9.1"
+
 libraryDependencies += "com.typesafe.akka" % "akka-actor" % "2.0.2"
 
 libraryDependencies += "com.typesafe.akka" % "akka-remote" % "2.0.2"

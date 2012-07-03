@@ -25,6 +25,8 @@ object SpawnerMain {
   def idToPort(id: Int) = 12000 + id
 
   def main(args: Array[String]) {
+  System.setProperty("org.clapper.avsl.config", "client-avsl.conf")
+
 //    system.actorOf(Props[Kernel], name = "kernel")
     if (args.length > 1) {
       val serverPort = args(0).toInt

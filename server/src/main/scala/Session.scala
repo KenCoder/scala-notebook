@@ -11,7 +11,7 @@ import concurrent.ops._
  * Author: Ken
  */
 
-class Session extends Actor {
+class Session(spawner: ActorRef) extends Actor {
 
   private var iopub: Option[WebSockWrapper] = None
   private var kernel: Option[ActorRef] = None
@@ -24,30 +24,30 @@ class Session extends Actor {
     for {
       pub <- iopub
       k <- kernel
-      req@SessionRequest(header, session, counter, code) <- requests
     } {
+      for (req@SessionRequest(header, session, counter, code) <- requests) {
+        pub.send( header, session, "status", ("execution_state" -> "busy"))
+        pub.send( header, session, "pyin", ("execution_count" -> counter) ~ ("code" -> code))
 
-      pub.send( header, session, "status", ("execution_state" -> "busy"))
-      pub.send( header, session, "pyin", ("execution_count" -> counter) ~ ("code" -> code))
-
-      executingRequests += req
-      k ! ExecuteRequest(code, context.self)
+        executingRequests += req
+        k ! ExecuteRequest(code)
+      }
+      requests.clear()
     }
-    requests.clear()
   }
 
   def receive =  {
         case IopubChannel(sock) =>
           iopub = Some(sock)
-//          KernelServerNotifier.connector = context.self
-          spawn {
-//            new DefaultKernelRunner().run()
-          }
-
+          spawner ! SpawnActor(Props[ScalaKernel], "scalaKernel")
           checkRequest()
 
         case e:SessionRequest =>
           requests += e
+          checkRequest()
+
+        case ActorSpawned(id, ref) =>
+          kernel = Some(ref)
           checkRequest()
 
         case ExecuteResponse(msg) =>
