@@ -6,8 +6,8 @@ import org.scalatest.WordSpec
 import org.scalatest.matchers.MustMatchers
 import org.scalatest.BeforeAndAfterAll
 import akka.testkit.ImplicitSender
-import akka.actor.{CreateChild, ActorSystem, Actor, Props}
 import akka.util.duration._
+import akka.actor._
 
 class EchoActor extends Actor {
   def receive = {
@@ -34,6 +34,7 @@ with WordSpec with MustMatchers with BeforeAndAfterAll {
       val resp = expectMsgType[ActorSpawned](10 seconds)
       resp.child ! "hello world"
       expectMsg("hello world")
+      spawner ! PoisonPill
     }
   }
   }
