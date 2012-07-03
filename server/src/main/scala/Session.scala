@@ -39,9 +39,9 @@ class Session extends Actor {
   def receive =  {
         case IopubChannel(sock) =>
           iopub = Some(sock)
-          KernelServerNotifier.connector = context.self
+//          KernelServerNotifier.connector = context.self
           spawn {
-            new DefaultKernelRunner().run()
+//            new DefaultKernelRunner().run()
           }
 
           checkRequest()

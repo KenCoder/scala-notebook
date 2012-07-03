@@ -1,12 +1,6 @@
 package com.k2sw.scalanb
 
-import client.DefaultKernelRunner
 import org.clapper.avsl.Logger
-import unfiltered.netty.websockets._
-import unfiltered.request.Path
-import java.net.URL
-import akka.actor.Actor
-import scala.concurrent.ops._
 import org.apache.commons.io.FileUtils
 import java.io.File
 
