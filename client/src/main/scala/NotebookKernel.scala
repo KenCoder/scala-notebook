@@ -2,7 +2,7 @@ package com.k2sw.scalanb.client
 
 import akka.actor.Actor
 import tools.nsc.Settings
-import tools.nsc.interpreter.{HackIMain, JLineCompletion}
+import tools.nsc.interpreter.{HackIMain, JLineCompletion, Parsed}
 import tools.nsc.interpreter.Completion.{ScalaCompleter, Candidates}
 import java.io.{PrintWriter, ByteArrayOutputStream}
 import tools.nsc.interpreter.Results.Success
@@ -24,6 +24,15 @@ case class ExecuteResponse(stdout: String)
 
 case class ErrorResponse(message: String)
 
+// CY: With high probability, the matchedText field is the segment of the input line that could
+// be sensibly replaced with (any of) the candidate.
+// i.e.
+//
+// input: "abc".inst
+//                  ^
+// the completions would come back as List("instanceOf") and matchedText => "inst"
+//
+// ...maybe...
 case class CompletionResponse(cursorPosition: Int, candidates: List[String], matchedText: String)
 
 
@@ -62,7 +71,7 @@ class NotebookKernel extends Actor {
     i
   }
 
-  lazy val completer: ScalaCompleter = new JLineCompletion(interp).completer()
+  lazy val completion = new JLineCompletion(interp)
 
   def receive = {
     case ExecuteRequest(_, code) =>
@@ -97,8 +106,17 @@ class NotebookKernel extends Actor {
         sender ! ErrorResponse(stdoutBytes.toString)
 
     case CompletionRequest(line, cursorPosition) =>
-        val Candidates(newCursor, candidates) = completer.complete(line, cursorPosition)
-        sender ! CompletionResponse(newCursor, candidates, line.substring(0, cursorPosition))
+      // CY: Don't ask to explain why this works.  Look at JLineCompletion.JLineTabCompletion.complete.mkDotted
+      // The "regularCompletion" path is the only path that is (likely) to succeed
+      // so we want access to that parsed version to pull out the part that was "matched"...
+      // ...just...trust me.
+      val parsed = Parsed.dotted(line, cursorPosition) // withVerbosity verbosity
+      val matchedText = line.takeRight(cursorPosition - parsed.position)
+
+      val completer = completion.completer().asInstanceOf[JLineCompletion#JLineTabCompletion]
+      val Candidates(newCursor, candidates) = completer.complete(line, cursorPosition)
+
+      sender ! CompletionResponse(cursorPosition, candidates, matchedText)
 
 
   }
