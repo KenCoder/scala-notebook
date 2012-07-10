@@ -49,8 +49,8 @@ class Session extends Actor {
           pub.send( header, session, "pyin", ("execution_count" -> counter) ~ ("code" -> code))
           kernel ! exec
 
-        case completion: CompletionRequest =>
-          kernel ! completion
+        case e =>
+          kernel ! e
       }
     }
 
@@ -81,13 +81,23 @@ class Session extends Actor {
       iopub.get.send(header, session, "stream", ("data" -> data) ~ ("name" -> name))
 
     case ErrorResponse(msg) =>
-      val SessionRequest(header, session, _) = executingRequests.dequeue()
+      val SessionRequest(header, session, ExecuteRequest(counter, _)) = executingRequests.dequeue()
       iopub.get.send( header, session, "pyerr", ("status" -> "error") ~ ("ename" -> "Error") ~ ("traceback" -> Seq(msg)))
       iopub.get.send( header, session, "status", ("execution_state" -> "idle"))
+      shell.get.send(header, session, "execute_reply", ("execution_count" -> counter))
 
     case CompletionResponse(cursorPosition, candidates, matchedText) =>
       val SessionRequest(header, session, CompletionRequest(_, _)) = executingRequests.dequeue()
       shell.get.send(header, session, "complete_reply", ("matched_text" -> matchedText) ~ ("matches" -> candidates))
+
+    case ObjectInfoResponse(found, name) =>
+      val SessionRequest(header, session, ObjectInfoRequest(_)) = executingRequests.dequeue()
+      shell.get.send(
+        header,
+        session,
+        "object_info_reply",
+        ("found" -> found) ~
+        ("name" -> name))
 
   }
 }

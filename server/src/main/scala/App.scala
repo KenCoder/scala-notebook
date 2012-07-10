@@ -15,7 +15,7 @@ import org.jboss.netty.handler.codec.http.HttpHeaders
 import java.util.UUID
 import akka.actor.{ActorRef, Props, ActorSystem}
 import java.util.concurrent.atomic.AtomicInteger
-import client.{ExecuteRequest, CompletionRequest}
+import client.{ExecuteRequest, CompletionRequest, ObjectInfoRequest}
 
 /** unfiltered plan */
 class App(port:Int) {
@@ -85,6 +85,13 @@ class App(port:Int) {
 
                   val kern = get(kernel)
                   kern ! SessionRequest(header, session, CompletionRequest(line, cursorPos.toInt))
+                }
+              }
+
+              case JString("object_info_request") => {
+                for (JField("oname", JString(oname)) <- content) {
+                  val kern = get(kernel)
+                  kern ! SessionRequest(header, session, ObjectInfoRequest(oname))
                 }
               }
             }

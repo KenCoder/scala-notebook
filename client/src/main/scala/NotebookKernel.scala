@@ -17,6 +17,7 @@ trait KernelRequest
 case class ExecuteRequest(counter: Int, code: String) extends KernelRequest
 case object InterruptRequest extends KernelRequest
 case class CompletionRequest(line: String, cursorPosition: Int) extends KernelRequest
+case class ObjectInfoRequest(objName: String) extends KernelRequest
 
 case class StreamResponse(data: String, name: String)
 
@@ -35,6 +36,16 @@ case class ErrorResponse(message: String)
 // ...maybe...
 case class CompletionResponse(cursorPosition: Int, candidates: List[String], matchedText: String)
 
+/*
+  name
+  call_def
+  init_definition
+  definition
+  call_docstring
+  init_docstring
+  docstring
+ */
+case class ObjectInfoResponse(found: Boolean, name: String, callDef: String, callDocString: String)
 
 class NotebookKernel extends Actor {
 
@@ -118,6 +129,11 @@ class NotebookKernel extends Actor {
 
       sender ! CompletionResponse(cursorPosition, candidates, matchedText)
 
+    case ObjectInfoRequest(objName) =>
+      println(objName)
+      val x = completion.completer().complete(objName + "\t\t\t", objName.length + 3)
+      val y = completion.completer().complete(objName + "\t\t\t", objName.length + 3)
+      sender ! ObjectInfoResponse(true, objName, "callDef", "callDocString")
 
   }
 }
