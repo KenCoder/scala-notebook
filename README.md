@@ -1,6 +1,13 @@
 scala-notebook
 ==============
 
+If you are looking here because you saw my talk proposal at nescala,
+know that I am working to publish the actual, working Scala Notebook
+from inside my company, where we've been developing it for the last
+six months. Star the project for updates!
+
+
+
 A more friendly, browser-based interactive Scala prompt (REPL).
 
 Based on the IPython notebook project, this project will let you interact with Scala in a browser window,
